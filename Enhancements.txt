@@ -1,0 +1,11 @@
+Password-Based Encryption 
+
+Payload Capacity Estimator
+
+File Integrity Verification
+
+Enhanced Graphical User Interface (GUI)
+
+Executable Application Packaging
+
+These are the enhancements we have made to this Project
