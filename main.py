@@ -36,7 +36,7 @@ class SteganographyApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("🔐 Steganography Tool v2")
-        self.geometry("720x820")
+        self.geometry("720x720")
         self.resizable(False, False)
         self.configure(fg_color=BG_MAIN)
 
@@ -69,7 +69,7 @@ class SteganographyApp(ctk.CTk):
             border_width=1,
             border_color=ACCENT,
             text_color=ACCENT,
-            hover_color="#1a2540",
+            hover_color="#dbe0ef",
             command=self._toggle_theme,
         )
         self.theme_btn.pack(side="right", padx=24)
