@@ -2,7 +2,6 @@ import threading
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
-
 from capacity import get_usage
 from encoder import encode_image
 from decoder import decode_image
@@ -18,7 +17,9 @@ SUCCESS      = "#2ecc71"
 WARNING      = "#f39c12"
 DANGER       = "#e74c3c"
 BG_CARD      = "#1e2130"
-BG_MAIN      = "#151722"
+BG_MAIN = ("#f5f5f5", "#151722")   # (light, dark)
+BG_CARD = ("#ffffff", "#1e2130")
+TEXT_DIM = ("#555555", "#8892a4")
 TEXT_DIM     = "#8892a4"
 
 
@@ -45,6 +46,44 @@ class SteganographyApp(ctk.CTk):
 
         self._build_header()
         self._build_tabs()
+    def _reset_app(self):
+        # Reset stored paths
+        self.encode_image_path = None
+        self.decode_image_path = None
+
+        # ── Encode Tab Reset ──
+        self.enc_img_label.configure(
+            text="No image selected — click Browse",
+            text_color=TEXT_DIM
+        )
+        self.enc_preview.configure(image=None, text="")
+        self.enc_preview_placeholder.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.message_box.delete("1.0", "end")
+        self.enc_password.delete(0, "end")
+        self.email_entry.delete(0, "end")
+
+        self.cap_bar.set(0)
+        self.cap_label.configure(text="")
+
+        self.enc_status.configure(text="")
+
+        # ── Decode Tab Reset ──
+        self.dec_img_label.configure(
+            text="No image selected — click Browse",
+            text_color=TEXT_DIM
+        )
+        self.dec_preview.configure(image=None, text="")
+        self.dec_preview_placeholder.configure(text="Image preview will appear here")
+        self.dec_preview_placeholder.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.dec_password.delete(0, "end")
+
+        self.result_box.configure(state="normal")
+        self.result_box.delete("1.0", "end")
+        self.result_box.configure(state="disabled")
+
+        self.integrity_label.configure(text="")
 
     # ── Header ────────────────────────────────────────────────────────────────
     def _build_header(self):
@@ -58,6 +97,19 @@ class SteganographyApp(ctk.CTk):
             font=ctk.CTkFont(family="Courier", size=22, weight="bold"),
             text_color=ACCENT,
         ).pack(side="left", padx=24, pady=15)
+        self.refresh_btn = ctk.CTkButton(
+            header,
+            text="♻️ Refresh",
+            width=100,
+            height=32,
+            fg_color="transparent",
+            border_width=1,
+            border_color=ACCENT,
+            text_color=ACCENT,
+            hover_color="#dbe0ef",
+            command=self._reset_app
+        )
+        self.refresh_btn.pack(side="right", padx=10)
 
         # Dark / light toggle
         self.theme_btn = ctk.CTkButton(
@@ -76,10 +128,16 @@ class SteganographyApp(ctk.CTk):
 
     # ── Tabs ──────────────────────────────────────────────────────────────────
     def _build_tabs(self):
-        self.tabs = ctk.CTkTabview(self, fg_color=BG_MAIN, segmented_button_fg_color=BG_CARD,
-                                   segmented_button_selected_color=ACCENT,
-                                   segmented_button_selected_hover_color=ACCENT_HOVER)
-        self.tabs.pack(fill="both", expand=True, padx=20, pady=10)
+        container = ctk.CTkScrollableFrame(self, fg_color=BG_MAIN)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        self.tabs = ctk.CTkTabview(container, fg_color=BG_MAIN,
+                                segmented_button_fg_color=BG_CARD,
+                                segmented_button_selected_color=ACCENT,
+                                segmented_button_selected_hover_color=ACCENT_HOVER)
+
+        self.tabs.pack(fill="both", expand=True)
+            
         self.tabs.add("  Encode  ")
         self.tabs.add("  Decode  ")
         self._build_encode_tab()
@@ -174,7 +232,7 @@ class SteganographyApp(ctk.CTk):
         self.enc_status = ctk.CTkLabel(tab, text="", font=ctk.CTkFont(size=13))
         self.enc_status.pack(pady=8)
 
-    # ── Decode Tab ────────────────────────────────────────────────────────────
+     # ── Decode Tab ────────────────────────────────────────────────────────────
     def _build_decode_tab(self):
         tab = self.tabs.tab("  Decode  ")
         tab.configure(fg_color=BG_MAIN)
