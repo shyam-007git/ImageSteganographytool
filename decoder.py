@@ -68,15 +68,14 @@ def decode_image(file_path: str, password: str):
     # 2. Parse payload
     raw_text = raw_text.rstrip("\n")
     parts = raw_text.split("|", 2)
-    if len(parts) != 3:
+    if len(parts) != 2:
         raise ValueError(
             "No hidden message found or image is not encoded with this tool."
         )
 
-    salt_hex, stored_hash, encrypted_data = parts
+    salt_hex, encrypted_data = parts
 
-    # 3. Integrity check — compare stored hash vs current pixel hash
-    integrity_ok = verify_integrity(stored_hash, file_path)
+    # 3. Integrity check — Handled in UI
 
     # 4. Re-derive key
     try:
@@ -91,4 +90,4 @@ def decode_image(file_path: str, password: str):
     except InvalidToken:
         raise ValueError("Wrong password! Decryption failed.")
 
-    return original_message, integrity_ok
+    return original_message

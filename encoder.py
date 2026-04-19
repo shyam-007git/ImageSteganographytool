@@ -68,8 +68,7 @@ def encode_image(image_path: str, secret_message: str, password: str,
 
     Returns output_path.
     """
-    # 1. Integrity hash of original image
-    original_hash = compute_image_hash(image_path)
+    
 
     # 2. Key derivation
     key, salt = derive_key_from_password(password)
@@ -80,7 +79,7 @@ def encode_image(image_path: str, secret_message: str, password: str,
     encrypted = fernet.encrypt(secret_message.encode("utf-8")).decode("utf-8")
 
     # 4. Build payload string: salt_hex|sha256hash|encrypted_data\n
-    payload = f"{salt_hex}|{original_hash}|{encrypted}\n"
+    payload = f"{salt_hex}|{encrypted}\n"
 
     # 5. Open image
     image = Image.open(image_path).convert("RGB")
@@ -108,4 +107,14 @@ def encode_image(image_path: str, secret_message: str, password: str,
     encoded_image.putdata(pixels)
     encoded_image.save(output_path)
 
+    # 🔐 Compute hash of encoded image
+    encoded_hash = compute_image_hash(output_path)
+
+    # Save hash to a file (same name + .hash)
+    hash_file = output_path + ".hash"
+    with open(hash_file, "w") as f:
+        f.write(encoded_hash)
+
     return output_path
+
+   

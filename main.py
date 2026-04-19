@@ -20,7 +20,7 @@ BG_CARD      = "#1e2130"
 BG_MAIN = ("#f5f5f5", "#151722")   # (light, dark)
 BG_CARD = ("#ffffff", "#1e2130")
 TEXT_DIM = ("#555555", "#8892a4")
-TEXT_DIM     = "#8892a4"
+
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ class SteganographyApp(ctk.CTk):
 
         self._build_header()
         self._build_tabs()
+        self.hash_file_path: str | None = None
     def _reset_app(self):
         # Reset stored paths
         self.encode_image_path = None
@@ -68,6 +69,7 @@ class SteganographyApp(ctk.CTk):
 
         self.enc_status.configure(text="")
 
+
         # ── Decode Tab Reset ──
         self.dec_img_label.configure(
             text="No image selected — click Browse",
@@ -84,6 +86,12 @@ class SteganographyApp(ctk.CTk):
         self.result_box.configure(state="disabled")
 
         self.integrity_label.configure(text="")
+        self.hash_file_path = None
+        self.hash_label.configure(
+            text="No hash file selected — click Browse",
+            text_color=TEXT_DIM
+        )
+        self.hash_input.delete(0, "end")
 
     # ── Header ────────────────────────────────────────────────────────────────
     def _build_header(self):
@@ -231,8 +239,16 @@ class SteganographyApp(ctk.CTk):
         # Status
         self.enc_status = ctk.CTkLabel(tab, text="", font=ctk.CTkFont(size=13))
         self.enc_status.pack(pady=8)
-
-     # ── Decode Tab ────────────────────────────────────────────────────────────
+    def _browse_hash_file(self):
+        path = filedialog.askopenfilename(
+            filetypes=[("Hash Files", "*.hash"), ("Text Files", "*.txt")]
+        )
+        if path:
+            self.hash_file_path = path
+            name = path.split("/")[-1].split("\\")[-1]
+            self.hash_label.configure(text=name, text_color="white")
+     # ── Decode Tab 
+     
     def _build_decode_tab(self):
         tab = self.tabs.tab("  Decode  ")
         tab.configure(fg_color=BG_MAIN)
@@ -253,6 +269,43 @@ class SteganographyApp(ctk.CTk):
             fg_color=ACCENT, hover_color=ACCENT_HOVER,
             command=self._browse_decode_image
         ).pack(side="right", padx=10, pady=8)
+        # ── Hash File ──
+        self._section_label(tab, "🔐  Hash File (optional)")
+
+        hash_row = ctk.CTkFrame(tab, fg_color=BG_CARD, corner_radius=12)
+        hash_row.pack(fill="x", pady=(4, 10))
+
+        self.hash_label = ctk.CTkLabel(
+            hash_row,
+            text="No hash file selected — click Browse",
+            text_color=TEXT_DIM,
+            anchor="w"
+        )
+        self.hash_label.pack(side="left", padx=14, pady=10, fill="x", expand=True)
+
+        ctk.CTkButton(
+            hash_row,
+            text="Browse",
+            width=90,
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            command=self._browse_hash_file
+        ).pack(side="right", padx=10, pady=8)
+
+
+        # ── OR Paste Hash ──
+        self._section_label(tab, "📋  Paste Hash (optional)")
+
+        self.hash_input = ctk.CTkEntry(
+            tab,
+            placeholder_text="Paste SHA-256 hash here...",
+            height=40,
+            corner_radius=10,
+            fg_color=BG_CARD,
+            border_color=ACCENT,
+            border_width=1
+        )
+        self.hash_input.pack(fill="x", pady=(4, 10))
 
         # Image preview
         self.dec_preview = ctk.CTkLabel(
@@ -401,7 +454,9 @@ class SteganographyApp(ctk.CTk):
         else:
             messagebox.showerror("Error", text)
 
-    # ── Decode ────────────────────────────────────────────────────────────────
+    
+# ── Decode ────────────────────────────────────────────────────────────────
+    
     def _run_decode(self):
         if not self.decode_image_path:
             messagebox.showerror("Error", "Please select an encoded image.")
@@ -416,32 +471,71 @@ class SteganographyApp(ctk.CTk):
         threading.Thread(
             target=self._decode_thread, args=(password,), daemon=True
         ).start()
-
     def _decode_thread(self, password: str):
         try:
-            message, integrity_ok = decode_image(self.decode_image_path, password)
+            # 🔓 Decode message first
+            message = decode_image(self.decode_image_path, password)
+
+            integrity_ok = None  # default = skipped
+
+            # 🔐 Optional integrity check
+            try:
+                stored_hash = None
+
+                if self.hash_file_path:
+                    with open(self.hash_file_path, "r") as f:
+                        stored_hash = f.read().strip()
+
+                else:
+                    hash_value = self.hash_input.get().strip()
+                    if hash_value:
+                        stored_hash = hash_value
+
+                if stored_hash:
+                    if len(stored_hash) != 64:
+                        raise ValueError("Invalid hash format.")
+
+                    from integrity import verify_integrity
+                    integrity_ok = verify_integrity(
+                        stored_hash,
+                        self.decode_image_path
+                    )
+
+            except:
+                integrity_ok = None  # don't break decoding
+
             self.after(0, lambda: self._decode_done(message, integrity_ok))
+
         except Exception as exc:
             self.after(0, lambda: self._decode_error(str(exc)))
+            
 
-    def _decode_done(self, message: str, integrity_ok: bool):
+    def _decode_done(self, message: str, integrity_ok: bool | None):
         self.dec_btn.configure(state="normal", text="🔓  Decode Message")
 
-        if integrity_ok:
+        if integrity_ok is True:
             self.integrity_label.configure(
-                text="✅  Integrity verified — image was not tampered with.",
+                text="✅ Integrity verified — image is safe.",
                 text_color=SUCCESS
             )
+
+        elif integrity_ok is False:
+            self.integrity_label.configure(
+                text="⚠️ Image may have been modified!",
+                text_color=WARNING
+            )
+
         else:
             self.integrity_label.configure(
-                text="⚠️  Warning: Image may have been modified after encoding!",
-                text_color=WARNING
+                text="ℹ️ Integrity check skipped.",
+                text_color=TEXT_DIM
             )
 
         self.result_box.configure(state="normal")
         self.result_box.delete("1.0", "end")
         self.result_box.insert("1.0", message)
-        self.result_box.configure(state="disabled")
+        self.result_box.configure(state="disabled")        
+  
 
     def _decode_error(self, error: str):
         self.dec_btn.configure(state="normal", text="🔓  Decode Message")
