@@ -4,6 +4,14 @@ setlocal
 REM Build standalone Windows executable using PyInstaller
 cd /d "%~dp0"
 
+set "UI_FLAG=--windowed"
+set "EXE_NAME=ImgStego"
+
+if /I "%~1"=="debug" (
+  set "UI_FLAG=--console"
+  set "EXE_NAME=ImgStego_debug"
+)
+
 if not exist isolation\Scripts\python.exe (
   echo [ERROR] Python environment not found at isolation\Scripts\python.exe
   echo Activate or create your env, then install dependencies.
@@ -23,8 +31,8 @@ echo [3/3] Building executable...
 isolation\Scripts\python.exe -m PyInstaller ^
   --noconfirm ^
   --clean ^
-  --windowed ^
-  --name ImgStego ^
+  %UI_FLAG% ^
+  --name %EXE_NAME% ^
   --onefile ^
   --collect-all customtkinter ^
   --collect-submodules cryptography ^
@@ -39,9 +47,13 @@ if errorlevel 1 (
 
 echo.
 echo Build complete.
-echo EXE location: dist\ImgStego.exe
+echo EXE location: dist\%EXE_NAME%.exe
 echo.
 echo IMPORTANT for email feature:
 echo Enter sender Gmail and App Password in the app UI while encoding.
+if /I "%~1"=="debug" (
+  echo.
+  echo DEBUG BUILD: a console window will show Python errors on launch.
+)
 
 endlocal

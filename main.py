@@ -503,7 +503,7 @@ class SteganographyApp(ctk.CTk):
         self.enc_status.configure(text="", text_color=TEXT_DIM)
         threading.Thread(
             target=self._encode_thread,
-            args=(message, password, email, sender_email, sender_password, self.email_entry.get().strip(), save_path),
+            args=(message, password, email, sender_email, sender_password, save_path),
             daemon=True
         ).start()
     def _open_project_info(self):
