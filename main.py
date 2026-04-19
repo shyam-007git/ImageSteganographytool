@@ -6,6 +6,8 @@ from capacity import get_usage
 from encoder import encode_image
 from decoder import decode_image
 from emailer import send_email
+import os
+import webbrowser
 
 # ── Theme ────────────────────────────────────────────────────────────────────
 ctk.set_appearance_mode("dark")
@@ -105,6 +107,18 @@ class SteganographyApp(ctk.CTk):
             font=ctk.CTkFont(family="Courier", size=22, weight="bold"),
             text_color=ACCENT,
         ).pack(side="left", padx=24, pady=15)
+        self.info_btn = ctk.CTkButton(
+            header,
+            text="ℹ️ Info",
+            width=90,
+            height=32,
+            fg_color="transparent",
+            border_width=1,
+            border_color=ACCENT,
+            text_color=ACCENT,
+            command=self._open_project_info
+        )
+        self.info_btn.pack(side="right", padx=10)
         self.refresh_btn = ctk.CTkButton(
             header,
             text="♻️ Refresh",
@@ -134,6 +148,8 @@ class SteganographyApp(ctk.CTk):
         )
         self.theme_btn.pack(side="right", padx=24)
 
+
+       
     # ── Tabs ──────────────────────────────────────────────────────────────────
     def _build_tabs(self):
         container = ctk.CTkScrollableFrame(self, fg_color=BG_MAIN)
@@ -150,6 +166,8 @@ class SteganographyApp(ctk.CTk):
         self.tabs.add("  Decode  ")
         self._build_encode_tab()
         self._build_decode_tab()
+
+   
 
     # ── Encode Tab ────────────────────────────────────────────────────────────
     def _build_encode_tab(self):
@@ -442,6 +460,10 @@ class SteganographyApp(ctk.CTk):
             args=(message, password, self.email_entry.get().strip(), save_path),
             daemon=True
         ).start()
+    def _open_project_info(self):
+        path = os.path.abspath("project_info.html")
+        webbrowser.open(f"file://{path}")
+    
 
     def _encode_thread(self, message: str, password: str, email: str, save_path: str):
         try:
