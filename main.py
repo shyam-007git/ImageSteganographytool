@@ -8,6 +8,7 @@ from decoder import decode_image
 from emailer import send_email
 import os
 import webbrowser
+import sys
 
 # ── Theme ────────────────────────────────────────────────────────────────────
 ctk.set_appearance_mode("dark")
@@ -22,6 +23,15 @@ BG_CARD      = "#1e2130"
 BG_MAIN = ("#f5f5f5", "#151722")   # (light, dark)
 BG_CARD = ("#ffffff", "#1e2130")
 TEXT_DIM = ("#555555", "#8892a4")
+
+
+def resource_path(relative_path: str) -> str:
+    """Return absolute path to resource in dev mode and PyInstaller bundles."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
 
 
 
@@ -243,6 +253,32 @@ class SteganographyApp(ctk.CTk):
             fg_color=BG_CARD, border_color=ACCENT, border_width=1
         )
         self.email_entry.pack(fill="x", pady=(4, 14))
+        # Sender Gmail
+        self._section_label(tab, "📤  Your Gmail")
+        self.sender_email = ctk.CTkEntry(
+            tab,
+            placeholder_text="yourgmail@gmail.com",
+            height=40,
+            corner_radius=10,
+            fg_color=BG_CARD,
+            border_color=ACCENT,
+            border_width=1
+        )
+        self.sender_email.pack(fill="x", pady=(4, 10))
+
+        # App Password
+        self._section_label(tab, "🔐  App Password")
+        self.sender_password = ctk.CTkEntry(
+            tab,
+            placeholder_text="16-digit app password",
+            show="•",
+            height=40,
+            corner_radius=10,
+            fg_color=BG_CARD,
+            border_color=ACCENT,
+            border_width=1
+        )
+        self.sender_password.pack(fill="x", pady=(4, 14))
 
         # Encode button
         self.enc_btn = ctk.CTkButton(
@@ -435,6 +471,16 @@ class SteganographyApp(ctk.CTk):
             return
         message = self.message_box.get("1.0", "end").strip()
         password = self.enc_password.get().strip()
+      
+        email = self.email_entry.get().strip()
+        sender_email = self.sender_email.get().strip()
+        sender_password = self.sender_password.get().strip()
+        if email:
+            if not sender_email or not sender_password:
+                messagebox.showerror("Error", "Enter your Gmail and App Password.")
+                return
+
+
         if not message:
             messagebox.showerror("Error", "Please enter a secret message.")
             return
@@ -457,21 +503,21 @@ class SteganographyApp(ctk.CTk):
         self.enc_status.configure(text="", text_color=TEXT_DIM)
         threading.Thread(
             target=self._encode_thread,
-            args=(message, password, self.email_entry.get().strip(), save_path),
+            args=(message, password, email, sender_email, sender_password, self.email_entry.get().strip(), save_path),
             daemon=True
         ).start()
     def _open_project_info(self):
-        path = os.path.abspath("project_info.html")
+        path = resource_path("project_info.html")
         webbrowser.open(f"file://{path}")
     
 
-    def _encode_thread(self, message: str, password: str, email: str, save_path: str):
+    def _encode_thread(self, message: str, password: str, email: str, sender_email: str, sender_password: str, save_path: str):
         try:
             output = encode_image(self.encode_image_path, message, password, save_path)
             status_text = f"✅  Saved → {output}"
 
             if email:
-                send_email(email, output)
+                send_email(email, output, sender_email, sender_password)
                 status_text += f"  |  📧 Emailed to {email}"
 
             self.after(0, lambda: self._encode_done(status_text, success=True))

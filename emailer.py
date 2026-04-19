@@ -1,30 +1,27 @@
 import os
+import sys
 import smtplib
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
-def send_email(receiver_email: str, image_path: str):
-    """
-    Send the encoded image to receiver_email.
-    Credentials are read from .env:
-      SMTP_EMAIL    - your Gmail address
-      SMTP_PASSWORD - your Gmail App Password
-    """
-    sender_email = os.getenv("SMTP_EMAIL")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+def _app_base_dir() -> str:
+    """Resolve app directory in source mode and frozen executable mode."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.abspath(os.path.dirname(__file__))
+
+
+
+
+def send_email(receiver_email: str, image_path: str, sender_email: str, smtp_password: str):
+    if not receiver_email:
+        raise ValueError("Receiver email is required.")
 
     if not sender_email or not smtp_password:
-        raise ValueError(
-            "Email credentials missing!\n"
-            "Add SMTP_EMAIL and SMTP_PASSWORD to your .env file."
-        )
-
+        raise ValueError("Missing Gmail credentials from user input.")
     subject = "Encrypted Steganography Image"
     body = (
         "Hello,\n\n"
