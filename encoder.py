@@ -56,7 +56,7 @@ def _embed_bits(pixels: list, binary: str) -> list:
 
 
 def encode_image(image_path: str, secret_message: str, password: str,
-                 output_path: str = "encoded_image.png"):
+                 output_path):
     """
     Full encode pipeline:
       1. Compute original image hash for integrity.

@@ -423,18 +423,29 @@ class SteganographyApp(ctk.CTk):
         if not password:
             messagebox.showerror("Error", "Please enter an encryption password.")
             return
+        
+            # ✅ NEW: ask user where to save
+        save_path = filedialog.asksaveasfilename(
+            defaultextension=".png",
+            filetypes=[("PNG Image", "*.png")],
+            title="Save Encoded Image"
+        )
+
+        if not save_path:
+            return  # user cancelled
+
 
         self.enc_btn.configure(state="disabled", text="⏳  Encoding…")
         self.enc_status.configure(text="", text_color=TEXT_DIM)
         threading.Thread(
             target=self._encode_thread,
-            args=(message, password, self.email_entry.get().strip()),
+            args=(message, password, self.email_entry.get().strip(), save_path),
             daemon=True
         ).start()
 
-    def _encode_thread(self, message: str, password: str, email: str):
+    def _encode_thread(self, message: str, password: str, email: str, save_path: str):
         try:
-            output = encode_image(self.encode_image_path, message, password)
+            output = encode_image(self.encode_image_path, message, password, save_path)
             status_text = f"✅  Saved → {output}"
 
             if email:
