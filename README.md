@@ -165,3 +165,49 @@ Without .env, the app still runs; only email sending will fail.
 - Add drag-and-drop image support
 - Add logging to a file for better diagnostics
 - Add digital signature to executable for smoother distribution trust
+## MAC setup
+git clone <repo>
+cd project
+
+python3 -m venv isolation
+source isolation/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+
+ Build the app (PyInstaller)
+pyinstaller \
+  --noconfirm \
+  --clean \
+  --windowed \
+  --name ImgStego \
+  --onefile \
+  --collect-all customtkinter \
+  --collect-submodules cryptography \
+  --add-data "project_info.html:." \
+  --add-data "assets:assets" \
+  main.py
+
+open dist/ImgStego.app
+## Linux setup
+git clone <repo>
+cd project
+
+python3 -m venv isolation
+source isolation/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+pyinstaller \
+  --noconfirm \
+  --clean \
+  --windowed \
+  --name ImgStego \
+  --onefile \
+  --collect-all customtkinter \
+  --collect-submodules cryptography \
+  --add-data "project_info.html:." \
+  --add-data "assets:assets" \
+  main.py
