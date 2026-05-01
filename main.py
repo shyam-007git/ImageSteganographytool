@@ -9,6 +9,10 @@ from emailer import send_email
 import os
 import webbrowser
 import sys
+import ctypes
+
+myappid = "imgstego.app.v1"  
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 
 # ── Theme ────────────────────────────────────────────────────────────────────
 ctk.set_appearance_mode("dark")
@@ -48,10 +52,28 @@ def _bar_color(percent: float) -> str:
 class SteganographyApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("🔐 Steganography Tool v2")
+        self.title(" Steganography Tool v2")
         self.geometry("720x720")
         self.resizable(False, False)
         self.configure(fg_color=BG_MAIN)
+
+        # Set window icon if available (runtime)
+        try:
+            ico_path = resource_path("assets/logo.ico")
+            if os.path.exists(ico_path):
+                try:
+                    self.iconbitmap(ico_path)
+                except Exception:
+                    # Some Tk builds prefer iconphoto with PhotoImage
+                    try:
+                        icon_img = Image.open(ico_path)
+                        photo = ImageTk.PhotoImage(icon_img)
+                        self.iconphoto(False, photo)
+                        self._icon_image = photo
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         self.encode_image_path: str | None = None
         self.decode_image_path: str | None = None
@@ -580,13 +602,14 @@ class SteganographyApp(ctk.CTk):
                         self.decode_image_path
                     )
 
-            except:
+            except Exception:
                 integrity_ok = None  # don't break decoding
 
             self.after(0, lambda: self._decode_done(message, integrity_ok))
 
         except Exception as exc:
-            self.after(0, lambda: self._decode_error(str(exc)))
+            error_msg = str(exc)
+            self.after(0, lambda: self._decode_error(error_msg))
             
 
     def _decode_done(self, message: str, integrity_ok: bool | None):

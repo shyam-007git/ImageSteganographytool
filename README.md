@@ -159,12 +159,7 @@ Without .env, the app still runs; only email sending will fail.
 - Reinstall dependencies with requirements.txt.
 - Delete build/ and dist/ and run build_exe.bat again.
 
-## Future Improvements
 
-- Add automated tests for encode/decode round trip
-- Add drag-and-drop image support
-- Add logging to a file for better diagnostics
-- Add digital signature to executable for smoother distribution trust
 ## MAC setup
 git clone <repo>
 cd project

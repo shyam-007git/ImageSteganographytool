@@ -4,13 +4,15 @@ setlocal
 REM Build standalone Windows executable using PyInstaller
 cd /d "%~dp0"
 
-set "UI_FLAG=--windowed"
 set "EXE_NAME=ImgStego"
 
 if /I "%~1"=="debug" (
-  set "UI_FLAG=--console"
   set "EXE_NAME=ImgStego_debug"
 )
+
+set "IMGSTEGO_CONSOLE=0"
+set "IMGSTEGO_NAME=%EXE_NAME%"
+if /I "%~1"=="debug" set "IMGSTEGO_CONSOLE=1"
 
 if not exist isolation\Scripts\python.exe (
   echo [ERROR] Python environment not found at isolation\Scripts\python.exe
@@ -25,20 +27,9 @@ isolation\Scripts\python.exe -m pip install -r requirements.txt
 echo [2/3] Cleaning old build artifacts...
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
-if exist ImgStego.spec del /f /q ImgStego.spec
 
 echo [3/3] Building executable...
-isolation\Scripts\python.exe -m PyInstaller ^
-  --noconfirm ^
-  --clean ^
-  %UI_FLAG% ^
-  --name %EXE_NAME% ^
-  --onefile ^
-  --collect-all customtkinter ^
-  --collect-submodules cryptography ^
-  --add-data "project_info.html;." ^
-  --add-data "assets;assets" ^
-  main.py
+isolation\Scripts\python.exe -m PyInstaller --noconfirm --clean ImgStego.spec
 
 if errorlevel 1 (
   echo [ERROR] Build failed.

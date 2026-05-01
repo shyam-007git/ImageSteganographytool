@@ -47,6 +47,17 @@ def send_email(receiver_email: str, image_path: str, sender_email: str, smtp_pas
         f'attachment; filename="{os.path.basename(image_path)}"'
     )
     msg.attach(part)
+    # 📎 Attach hash file
+    hash_path = image_path + ".hash"
+
+    if os.path.exists(hash_path):
+        with open(hash_path, "rb") as f:
+            hash_part = MIMEApplication(f.read(), Name=os.path.basename(hash_path))
+
+        hash_part["Content-Disposition"] = (
+            f'attachment; filename="{os.path.basename(hash_path)}"'
+        )
+        msg.attach(hash_part)
 
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
