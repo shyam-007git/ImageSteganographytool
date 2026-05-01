@@ -18,15 +18,15 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-ACCENT       = "#4f8ef7"
-ACCENT_HOVER = "#2d6be4"
+ACCENT       ="#3A7D7C" 
+ACCENT_HOVER ="#2E6665"
 SUCCESS      = "#2ecc71"
 WARNING      = "#f39c12"
-DANGER       = "#e74c3c"
-BG_CARD      = "#1e2130"
-BG_MAIN = ("#f5f5f5", "#151722")   # (light, dark)
-BG_CARD = ("#ffffff", "#1e2130")
-TEXT_DIM = ("#555555", "#8892a4")
+DANGER       =  "#e74c3c"
+
+BG_MAIN = ("#f5f5f5", "#000000")  
+BG_CARD =("#ffffff", "#121212") 
+TEXT_DIM = ("#555555", "#A8B0B8")
 
 
 def resource_path(relative_path: str) -> str:
